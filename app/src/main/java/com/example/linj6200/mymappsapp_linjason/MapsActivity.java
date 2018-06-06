@@ -9,6 +9,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -290,6 +291,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //break;
                 //default;
                 //enbale both network and gps
+            switch(status) {
+                case LocationProvider.AVAILABLE:
+                    Log.d("MyMapsApp", "locationListenerNetwork: LocationProvider.AVAILABLE");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    Log.d("MyMaps", "locationListenerNetwork: LocationProvider.OUT_OF_SERVICE");
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerNetwork);
+                    break;
+
+            }
 
         }
 

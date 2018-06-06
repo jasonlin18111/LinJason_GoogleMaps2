@@ -28,11 +28,11 @@
       <file leaf-file-name="MapsActivity.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/linj6200/mymappsapp_linjason/MapsActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1730">
-              <caret line="358" column="21" lean-forward="false" selection-start-line="358" selection-start-column="21" selection-end-line="358" selection-end-column="21" />
+            <state relative-caret-position="344">
+              <caret line="301" column="0" lean-forward="true" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
               <folding>
-                <element signature="e#16510#16511#0" expanded="true" />
-                <element signature="e#16538#16539#0" expanded="true" />
+                <element signature="e#17117#17118#0" expanded="true" />
+                <element signature="e#17145#17146#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -2086,9 +2086,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="889" />
-    <option name="width" value="1038" />
-    <option name="height" value="1047" />
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1400" />
+    <option name="height" value="1000" />
   </component>
   <component name="ProjectView">
     <navigator currentView="AndroidView" proportions="" version="1">
@@ -2384,11 +2385,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/linj6200/mymappsapp_linjason/MapsActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1730">
-          <caret line="358" column="21" lean-forward="false" selection-start-line="358" selection-start-column="21" selection-end-line="358" selection-end-column="21" />
+        <state relative-caret-position="344">
+          <caret line="301" column="0" lean-forward="true" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
           <folding>
-            <element signature="e#16510#16511#0" expanded="true" />
-            <element signature="e#16538#16539#0" expanded="true" />
+            <element signature="e#17117#17118#0" expanded="true" />
+            <element signature="e#17145#17146#0" expanded="true" />
           </folding>
         </state>
       </provider>
