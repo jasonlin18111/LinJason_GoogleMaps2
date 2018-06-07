@@ -13,6 +13,7 @@ import android.location.LocationProvider;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -42,8 +43,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean gotMyLocationOneTime;
     private boolean isGPSEnabled = false;
     private boolean isNetworkEnabled = false;
-    private boolean notTrackingMyLocation = true;
+    private boolean trackingMyLocation = true;
 
+//    private List<LatLng> points;
 
     private static final long MIN_TIME_BW_UPDATES = 1000 * 5;
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATE = 0.0f;
@@ -129,52 +131,123 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d("MyMapsApp", "onSearch: Location= " + location);
         Log.d("MyMapsApp", "onSearch: Provider= " + provider);
 
-        LatLng userLocation = null;
-        try {
-            //check the last known location, ned to specifically list the provider network or gps
-            if (locationManager != null) {
-                Log.d("MyMapsApp", "onSearch: locationManager not null");
-                if ((myLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)) != null) {
-                    userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                    Log.d("MyMapsApp", "onSearch: using NETWORK_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
-                    Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-                } else if ((myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)) != null) {
-                    userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                    Log.d("MyMapsApp", "onSearch: using GPS_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
-                    Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Log.d("MyMapsApp", "onSearch: myLocation is null");
-                }
-            }
-        } catch (SecurityException | IllegalArgumentException e) {
-            Log.d("MyMapsApp", "Exception on getLastKnownLocation");
-        }
-        if (!location.matches("")) {
-            //Create Geocoder
-            Geocoder geocoder = new Geocoder(this, Locale.US);
+ /*       double avg_change_latitude;
+        double avg_change_longitude;
+        double slope;
+        int upperLeft_latitude;
+        int upperLeft_longitude;
+        int num_points_considered=3;
 
+
+        if(points.size()>=2){
+            if(num_points_considered>points.size()){
+                avg_change_latitude=points.get(points.size()-1).latitude - points.get(0).latitude;
+                avg_change_longitude=points.get(points.size()-1).longitude - points.get(0).longitude;
+            }
+            else{
+                avg_change_latitude=points.get(points.size()-1).latitude - points.get(points.size()-1-num_points_considered).latitude;
+                avg_change_longitude=points.get(points.size()-1).longitude - points.get(points.size()-1-num_points_considered).longitude;
+
+            }
+            slope = -avg_change_longitude/avg_change_latitude;
+
+
+            LatLng userLocation = null;
             try {
-                //Get a list of addresses
-                addressList = geocoder.getFromLocationName(location, 100,
-                        userLocation.latitude - (5.0 / 60.0),
-                        userLocation.longitude - (5.0 / 60.0),
-                        userLocation.latitude + (5.0 / 60.0),
-                        userLocation.longitude + (5.0 / 60.0));
-                Log.d("MyMapsApp", "created addressList");
-
-            } catch (IOException e) {
-                e.printStackTrace();
+                //check the last known location, ned to specifically list the provider network or gps
+                if (locationManager != null) {
+                    Log.d("MyMapsApp", "onSearch: locationManager not null");
+                    if ((myLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)) != null) {
+                        userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                        Log.d("MyMapsApp", "onSearch: using NETWORK_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
+                        Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                    } else if ((myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)) != null) {
+                        userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                        Log.d("MyMapsApp", "onSearch: using GPS_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
+                        Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.d("MyMapsApp", "onSearch: myLocation is null");
+                    }
+                }
+            } catch (SecurityException | IllegalArgumentException e) {
+                Log.d("MyMapsApp", "Exception on getLastKnownLocation");
             }
-            if (!addressList.isEmpty()) {
-                Log.d("MyMapsApp", "Address list size: " + addressList.size());
-                for (int i = 0; i < addressList.size(); i++) {
-                    Address address = addressList.get(i);
-                    LatLng latlng = new LatLng(address.getLatitude(), address.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(latlng).title(i + ": " + address.getSubThoroughfare()));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng));
+            if (!location.matches("")) {
+                //Create Geocoder
+                Geocoder geocoder = new Geocoder(this, Locale.US);
+
+                try {
+                    //Get a list of addresses
+                    addressList = geocoder.getFromLocationName(location, 100,
+                            userLocation.latitude - (5.0 / 60.0)*slope,
+                            userLocation.longitude - (5.0 / 60.0),
+                            userLocation.latitude + (5.0 / 60.0),
+                            userLocation.longitude + (5.0 / 60.0));
+                    Log.d("MyMapsApp", "created addressList");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (!addressList.isEmpty()) {
+                    Log.d("MyMapsApp", "Address list size: " + addressList.size());
+                    for (int i = 0; i < addressList.size(); i++) {
+                        Address address = addressList.get(i);
+                        LatLng latlng = new LatLng(address.getLatitude(), address.getLongitude());
+                        mMap.addMarker(new MarkerOptions().position(latlng).title(i + ": " + address.getSubThoroughfare()));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng));
+                    }
                 }
             }
         }
+*/
+//        else {
+            LatLng userLocation = null;
+            try {
+                //check the last known location, ned to specifically list the provider network or gps
+                if (locationManager != null) {
+                    Log.d("MyMapsApp", "onSearch: locationManager not null");
+                    if ((myLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)) != null) {
+                        userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                        Log.d("MyMapsApp", "onSearch: using NETWORK_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
+                        Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                    } else if ((myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)) != null) {
+                        userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                        Log.d("MyMapsApp", "onSearch: using GPS_PROVIDER userLocation is: " + myLocation.getLatitude() + " " + myLocation.getLongitude());
+                        Toast.makeText(this, "UserLoc: " + myLocation.getLatitude() + " " + myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.d("MyMapsApp", "onSearch: myLocation is null");
+                    }
+                }
+            } catch (SecurityException | IllegalArgumentException e) {
+                Log.d("MyMapsApp", "Exception on getLastKnownLocation");
+            }
+            if (!location.matches("")) {
+                //Create Geocoder
+                Geocoder geocoder = new Geocoder(this, Locale.US);
+
+                try {
+                    //Get a list of addresses
+                    addressList = geocoder.getFromLocationName(location, 100,
+                            userLocation.latitude - (5.0 / 60.0),
+                            userLocation.longitude - (5.0 / 60.0),
+                            userLocation.latitude + (5.0 / 60.0),
+                            userLocation.longitude + (5.0 / 60.0));
+                    Log.d("MyMapsApp", "created addressList");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (!addressList.isEmpty()) {
+                    Log.d("MyMapsApp", "Address list size: " + addressList.size());
+                    for (int i = 0; i < addressList.size(); i++) {
+                        Address address = addressList.get(i);
+                        LatLng latlng = new LatLng(address.getLatitude(), address.getLongitude());
+                        mMap.addMarker(new MarkerOptions().position(latlng).title(i + ": " + address.getSubThoroughfare()));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng));
+                    }
+                }
+            }
+//       }
     }
 
     //Method getLocation to place a marker at current location
@@ -244,6 +317,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.d("MyMapsApp", "locationListenerNetwork: status change");
+            /*switch(status) {
+                case LocationProvider.AVAILABLE:
+                    Toast.makeText(getApplicationContext(), "LocationProvider.AVAILABLE", Toast.LENGTH_SHORT).show();
+                    Log.d("MyMapsApp", "locationListenerNetwork: LocationProvider.AVAILABLE");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    Log.d("MyMaps", "locationListenerNetwork: LocationProvider.OUT_OF_SERVICE");
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerNetwork);
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    Log.d("MyMaps", "LocationProvider is temporarily unavailable");
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerNetwork);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerGPS);
+                    break;
+                default:
+                    Log.d("MyMaps", "LocationProvider default");
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            return;
+                    }
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerNetwork);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerGPS);
+                    break;
+            }*/
+            switch(status) {
+                case LocationProvider.AVAILABLE:
+                    Toast.makeText(getApplicationContext(), "LocationProvider.AVAILABLE", Toast.LENGTH_SHORT).show();
+                    Log.d("MyMapsApp", "locationListenerNetwork: LocationProvider.AVAILABLE");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    Log.d("MyMaps", "locationListenerNetwork: LocationProvider.OUT_OF_SERVICE");
+                    isNetworkEnabled=true;
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    Log.d("MyMaps", "LocationProvider is temporarily unavailable");
+                    isNetworkEnabled=true;
+                    isGPSEnabled=true;
+                    break;
+                default:
+                    Log.d("MyMaps", "LocationProvider default");
+                    isNetworkEnabled=true;
+                    isGPSEnabled=true;
+            }
         }
 
         @Override
@@ -293,14 +417,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //enbale both network and gps
             switch(status) {
                 case LocationProvider.AVAILABLE:
+                    Toast.makeText(getApplicationContext(), "LocationProvider.AVAILABLE", Toast.LENGTH_SHORT).show();
                     Log.d("MyMapsApp", "locationListenerNetwork: LocationProvider.AVAILABLE");
                     break;
                 case LocationProvider.OUT_OF_SERVICE:
                     Log.d("MyMaps", "locationListenerNetwork: LocationProvider.OUT_OF_SERVICE");
-                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATE, locationListenerNetwork);
+                    isNetworkEnabled=true;
                     break;
-
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    Log.d("MyMaps", "LocationProvider is temporarily unavailable");
+                    isNetworkEnabled=true;
+                    isGPSEnabled=true;
+                    break;
+                default:
+                    Log.d("MyMaps", "LocationProvider default");
+                    isNetworkEnabled=true;
+                    isGPSEnabled=true;
             }
+
 
         }
 
@@ -340,25 +474,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
                     mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.BLUE));
                 }
+                LatLng currentPoint = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+//                points.add(currentPoint);
                 mMap.animateCamera(update);
             }
         }
     }
     public void trackMyLocation(View view){
-        getLocation();
-        if(notTrackingMyLocation==true){
-            notTrackingMyLocation=false;
+        /*
+        if(trackingMyLocation){
+            trackingMyLocation=false;
         }
         else{
-            notTrackingMyLocation=true;
+            trackingMyLocation=true;
         }
-        if(notTrackingMyLocation){
+        if(trackingMyLocation){
             getLocation();
         }
         else{
             locationManager.removeUpdates(locationListenerGPS);
             locationManager.removeUpdates(locationListenerNetwork);
-
+        }
+        */
+        if(trackingMyLocation){
+            getLocation();
+            Toast.makeText(this, "Turned tracking on", Toast.LENGTH_SHORT).show();
+            trackingMyLocation=false;
+        }
+        else if(!trackingMyLocation){
+            isGPSEnabled=!isGPSEnabled;
+            isNetworkEnabled=!isNetworkEnabled;
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            locationManager.removeUpdates(locationListenerGPS);
+            locationManager.removeUpdates(locationListenerNetwork);
+            Toast.makeText(this, "Turned tracking off", Toast.LENGTH_SHORT).show();
+            trackingMyLocation=true;
         }
         //kick off the location tracker using getLocation to start the LocationListener
         //if(notTrackingMyLocation) getLocation(); notTrackingLocation=false;
@@ -368,6 +520,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void clearMarkers(View view){
         mMap.clear();
+//        points.clear();
     }
 
 }
